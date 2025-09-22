@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🗝️ Laberinto Matemático</title>
+  <style>
+    :root{
+      --bg:#c6f0ff;
+      --wall:#4db8ff;
+      --player:#ff6f91;
+      --door:#ffe066;
+      --text:#001;
+      --panel:#fff8dc;
+      --accent:#ffb347;
+    }
+    body{margin:0;font-family:'Comic Sans MS',Arial,sans-serif;background:var(--bg);display:flex;justify-content:center;align-items:center;height:100vh;}
+    .game-container{display:flex;gap:20px;}
+    .maze{display:grid;grid-template-rows:repeat(10,50px);grid-template-columns:repeat(10,50px);background:var(--panel);border-radius:12px;overflow:hidden;box-shadow:0 6px 15px rgba(0,0,0,0.2);}
+    .cell{border:1px solid #fff;display:flex;justify-content:center;align-items:center;font-weight:700;color:var(--text);font-size:18px;}
+    .wall{background:var(--wall);}
+    .player{background:var(--player);}
+    .door{background:var(--door);cursor:pointer;}
+    .panel-control{display:flex;flex-direction:column;gap:12px;align-items:center;}
+    .question-box{padding:10px;border-radius:10px;background:var(--accent);font-weight:700;}
+    .answers{display:flex;flex-direction:column;gap:8px;margin-top:6px;}
+    .ansBtn{padding:8px 12px;border-radius:8px;border:0;background:#fff8e7;cursor:pointer;font-weight:700;transition:0.2s;}
+    .ansBtn:hover{transform:scale(1.05)}
+    h2{text-align:center;margin:0;}
+    #score{font-weight:700;}
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div class="maze" id="maze"></div>
+    <div class="panel-control">
+      <h2>Laberinto Matemático</h2>
+      <div class="question-box" id="question">Presiona iniciar para generar la primera puerta</div>
+      <div class="answers" id="answers"></div>
+      <button id="startBtn" class="ansBtn">Iniciar Juego</button>
+      <div id="score">Puntos: 0</div>
+    </div>
+  </div>
+
+  <script>
+    const mazeEl=document.getElementById('maze');
+    const questionEl=document.getElementById('question');
+    const answersEl=document.getElementById('answers');
+    const startBtn=document.getElementById('startBtn');
+    const scoreEl=document.getElementById('score');
+
+    const ROWS=10; const COLS=10;
+    let maze=[], playerPos={row:0,col:0}, score=0;
+
+    function generateMaze(){
+      maze=[];
+      for(let r=0;r<ROWS;r++){
+        maze[r]=[];
+        for(let c=0;c<COLS;c++){
+          if(Math.random()<0.2 && !(r==0 && c==0) && !(r==ROWS-1 && c==COLS-1)) maze[r][c]='wall';
+          else maze[r][c]='empty';
+        }
+      }
+      maze[0][0]='player';
+      maze[ROWS-1][COLS-1]='door';
+    }
+
+    function renderMaze(){
+      mazeEl.innerHTML='';
+      for(let r=0;r<ROWS;r++){
+        for(let c=0;c<COLS;c++){
+          const cell=document.createElement('div');
+          cell.className='cell '+maze[r][c];
+          mazeEl.appendChild(cell);
+        }
+      }
+    }
+
+    function generateQuestion(){
+      let a=Math.floor(Math.random()*10)+1;
+      let b=Math.floor(Math.random()*10)+1;
+      let op=['+','-','*'][Math.floor(Math.random()*3)];
+      let answer;
+      if(op=='+') answer=a+b;
+      else if(op=='-') answer=a-b;
+      else answer=a*b;
+      questionEl.textContent=`¿Cuánto es ${a} ${op} ${b}?`;
+      answersEl.innerHTML='';
+      let choices=[answer];
+      while(choices.length<4){
+        let val=answer+Math.floor(Math.random()*10-5);
+        if(!choices.includes(val)) choices.push(val);
+      }
+      choices.sort(()=>Math.random()-0.5);
+      choices.forEach(c=>{
+        const b=document.createElement('button');
+        b.textContent=c;
+        b.className='ansBtn';
+        b.onclick=()=>checkAnswer(c,answer);
+        answersEl.appendChild(b);
+      });
+    }
+
+    function checkAnswer(selected,correct){
+      if(selected===correct){
+        movePlayer();
+        score+=10;
+      }else{
+        score-=5;
+      }
+      scoreEl.textContent='Puntos: '+score;
+      generateQuestion();
+    }
+
+    function movePlayer(){
+      if(playerPos.row<ROWS-1) {
+        maze[playerPos.row][playerPos.col]='empty';
+        playerPos.row++;
+        if(maze[playerPos.row][playerPos.col]==='door'){
+          alert('¡Felicidades! ¡Saliste del laberinto!');
+          score+=50;
+          scoreEl.textContent='Puntos: '+score;
+          return;
+        }
+        maze[playerPos.row][playerPos.col]='player';
+        renderMaze();
+      }
+    }
+
+    startBtn.onclick=()=>{
+      generateMaze();
+      renderMaze();
+      playerPos={row:0,col:0};
+      score=0; scoreEl.textContent='Puntos: '+score;
+      generateQuestion();
+    };
+  </script>
+</body>
+</html>
